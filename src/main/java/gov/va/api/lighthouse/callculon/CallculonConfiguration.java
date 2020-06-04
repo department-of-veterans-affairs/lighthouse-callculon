@@ -1,11 +1,15 @@
 package gov.va.api.lighthouse.callculon;
 
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CallculonConfiguration {
 
   String name;
@@ -19,6 +23,8 @@ public class CallculonConfiguration {
 
   @Data
   @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class Deployment {
     boolean enabled;
     String cron;
@@ -29,12 +35,16 @@ public class CallculonConfiguration {
 
   @Data
   @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class Notification {
     Slack slack;
   }
 
   @Data
   @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class Request {
     String hostname;
     int port;
@@ -45,6 +55,8 @@ public class CallculonConfiguration {
 
   @Data
   @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class Slack {
     String webhook;
     String channel;
