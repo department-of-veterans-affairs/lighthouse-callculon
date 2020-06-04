@@ -9,7 +9,13 @@ public class CallculonHandler implements RequestHandler<ScheduledEvent, Callculo
 
   @Override
   public CallculonResponse handleRequest(ScheduledEvent scheduledEvent, Context context) {
-    System.out.println("OH MAN GALRIC! " + scheduledEvent + " " + context);
-    return CallculonResponse.builder().timeStamp(Instant.now()).statusCode(418).build();
+    context.getLogger().log("OH MAN GALRIC! " + scheduledEvent + " " + context);
+    context.getLogger().log(scheduledEvent.getDetailType());
+    context.getLogger().log("" + scheduledEvent.getDetail());
+
+    return CallculonResponse.builder()
+        .epochTime(Instant.now().toEpochMilli())
+        .statusCode(418)
+        .build();
   }
 }

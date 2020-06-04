@@ -1,6 +1,5 @@
 package gov.va.api.lighthouse.callculon;
 
-import java.time.Instant;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,5 +9,5 @@ public class CallculonResponse {
 
   int statusCode;
 
-  Instant timeStamp;
+  long epochTime;
 }
