@@ -11,9 +11,10 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
     context.getLogger().log("OH MAN GALRIC! " + context.getAwsRequestId());
     context.getLogger().log("" + event);
 
-    return CallculonResponse.builder()
-        .epochTime(Instant.now().toEpochMilli())
-        .statusCode(418)
-        .build();
+    CallculonResponse response =
+        CallculonResponse.builder().epochTime(Instant.now().toEpochMilli()).statusCode(418).build();
+
+    context.getLogger().log("" + response);
+    return response;
   }
 }
