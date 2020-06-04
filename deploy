@@ -3,6 +3,7 @@ set -euo pipefail
 
 WORK=$(mktemp -d .lambda.XXXXX)
 onExit() { rm -rf $WORK; }
+trap onExit EXIT
 
 getFunction() {
   local functionName=$1
