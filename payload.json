@@ -1,0 +1,27 @@
+{
+  "name": "callculon-manual-test",
+  "deployment": {
+    "enabled": true,
+    "cron": "0 0 * * *",
+    "product": "callculon-manual-test",
+    "version": "1.0.0",
+    "id": "0-callculon-manual-test-0-0-0-000"
+  },
+  "request": {
+    "hostname": "api.va.gov",
+    "port": 443,
+    "path": "/services/fhir/v0/dstu2/metadata",
+    "method": "GET",
+    "headers": {
+       "not-needed": "but-ok"
+     }
+  },
+  "notification": {
+    "slack": {
+      "webhook":"aws-secret(/dvp/slack/liberty)",
+      "channel":"shanktopus",
+      "onFailure": true,
+      "onSuccess": false
+    }
+  }
+}

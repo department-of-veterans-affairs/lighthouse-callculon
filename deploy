@@ -25,6 +25,11 @@ deploy() {
 # TODO VPC/SUBNET CONFIGURATION
   if getFunction $name
   then
+    echo "Updating $name"
+    aws lambda update-function-code \
+      --function-name $name \
+      --zip-file fileb://$jar
+  else
     echo "Creating $name"
     aws lambda create-function \
       --function-name $name \
@@ -35,11 +40,6 @@ deploy() {
       --memory-size $memorySize \
       --publish \
       --tags Owner=bschofield,DeleteMe=true \
-      --zip-file fileb://$jar
-  else
-    echo "Updating $name"
-    aws lambda update-function-code \
-      --function-name $name \
       --zip-file fileb://$jar
   fi
 }
