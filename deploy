@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WORK=$(mktemp -d .lambda.XXXXX)
+onExit() { rm -rf $WORK; }
+
+getFunction() {
+  local functionName=$1
+  if aws lambda get-function --function-name $functionName > $WORK/$functionName
+  then
+   return 0
+  fi
+  return 1
+}
+
+deploy() {
+  local executionRoleArn="arn:aws-us-gov:iam::533575416491:role/project/project-slack-alerts-role"
+  local name=project-callculon
+  local runtime=java11
+  local handler=gov.va.api.lighthouse.callculon.CallculonHandler
+  local timeout=120
+  local memorySize=512
+  local jar=$(find target/ -name "callculon-*.jar" -print -quit)
+  
+# TODO VPC/SUBNET CONFIGURATION
+  if getFunction $name
+  then
+    echo "Creating $name"
+    aws lambda create-function \
+      --function-name $name \
+      --runtime $runtime \
+      --role $executionRoleArn \
+      --handler $handler \
+      --timeout $timeout \
+      --memory-size $memorySize \
+      --publish \
+      --tags Owner=bschofield,DeleteMe=true \
+      --zip-file fileb://$jar
+  else
+    echo "Updating $name"
+    aws lambda update-function-code \
+      --function-name $name \
+      --zip-file fileb://$jar
+  fi
+}
+
+
+deploy
+
