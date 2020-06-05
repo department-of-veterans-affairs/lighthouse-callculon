@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CallculonResponse {
-
-  int statusCode;
-
-  long epochTime;
+  private int statusCode;
+  private String requestTime;
+  private String duration;
+  private boolean notificationError;
 }
