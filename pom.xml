@@ -12,9 +12,11 @@
   <packaging>jar</packaging>
   <properties>
     <java.version>11</java.version>
-    <jacoco.coverage>0.0</jacoco.coverage>
+    <jacoco.coverage>0.95</jacoco.coverage>
     <aws-lambda-java-core.version>1.2.1</aws-lambda-java-core.version>
-    <aws-lambda-java-events.version>2.2.9</aws-lambda-java-events.version>
+    <junit-jupiter.version>5.5.2</junit-jupiter.version>
+    <mockito-junit-jupiter.version>3.1.0</mockito-junit-jupiter.version>
+    <assertj-core.version>3.13.2</assertj-core.version>
   </properties>
   <dependencies>
     <dependency>
@@ -23,21 +25,30 @@
       <version>${aws-lambda-java-core.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.amazonaws</groupId>
-      <artifactId>aws-lambda-java-events</artifactId>
-      <version>${aws-lambda-java-events.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito-junit-jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>${assertj-core.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
     <plugins>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>2.22.2</version>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
