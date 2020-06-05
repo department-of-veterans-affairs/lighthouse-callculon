@@ -30,6 +30,11 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
 
   private final HttpClient client;
 
+  /**
+   * Create a new instance from options (or not... whatever) If no options are specified, they will
+   * be picked from environment variables, or we'll just assume some defaults if environment
+   * variables are not available.
+   */
   @Builder
   public CallculonHandler(HandlerOptions maybeOptions) {
     this.options = maybeOptions == null ? HandlerOptions.fromEnvironmentVariables() : maybeOptions;
@@ -134,6 +139,14 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
       return Duration.parse(value == null ? defaultValue : value);
     }
 
+    /**
+     * Create options from environment variables.
+     *
+     * <pre>
+     * CALLCULON_CONNECT_TIMEOUT = ISO 8601 Duration (PT20S)
+     * CALLCULON_REQUEST_TIMEOUT = ISO 8601 Duration (PT120S)
+     * </pre>
+     */
     public static HandlerOptions fromEnvironmentVariables() {
       return HandlerOptions.builder()
           .connectTimeout(duration("CALLCULON_CONNECT_TIMEOUT", "PT20S"))
