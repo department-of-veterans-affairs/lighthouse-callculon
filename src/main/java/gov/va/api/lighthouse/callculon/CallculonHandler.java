@@ -18,6 +18,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -49,6 +50,7 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
   private static URI asUri(Request request) {
     check(request.getHostname() != null, "missing hostname");
     check(request.getPath() != null, "missing path");
+    check(request.getPort() > 0, "missing port");
     String protocol =
         ofNullable(request.getProtocol())
             .orElse(Protocol.HTTPS)
@@ -114,33 +116,31 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
   }
 
   String titleOf(CallculonConfiguration config) {
-    return new StringBuilder()
-        .append(config.getName())
-        .append(" [")
-        .append(config.getDeployment().getId())
-        .append("] (")
-        .append(config.getDeployment().getProduct())
-        .append(' ')
-        .append(config.getDeployment().getVersion())
-        .append(")")
-        .toString();
+    return config.getName()
+        + " ["
+        + config.getDeployment().getId()
+        + "] ("
+        + config.getDeployment().getProduct()
+        + ' '
+        + config.getDeployment().getVersion()
+        + ")";
   }
 
   @Builder
   @Getter
   @Accessors(fluent = true)
   public static class HandlerOptions {
+
+    public static final String OPTION_CONNECT_TIMEOUT = "CALLCULON_CONNECT_TIMEOUT";
+
+    public static final String OPTION_REQUEST_TIMEOUT = "CALLCULON_REQUEST_TIMEOUT";
+
     @NonNull private final Duration connectTimeout;
 
     @NonNull private final Duration requestTimeout;
 
-    static Duration duration(String name, String defaultValue) {
-      String value = System.getenv(name);
-      return Duration.parse(value == null ? defaultValue : value);
-    }
-
     /**
-     * Create options from environment variables.
+     * Create options from System environment variables.
      *
      * <pre>
      * CALLCULON_CONNECT_TIMEOUT = ISO 8601 Duration (PT20S)
@@ -148,9 +148,21 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
      * </pre>
      */
     public static HandlerOptions fromEnvironmentVariables() {
+      return fromEnvironmentVariables(System.getenv());
+    }
+
+    /**
+     * Create options from a given environment map.
+     *
+     * <pre>
+     * CALLCULON_CONNECT_TIMEOUT = ISO 8601 Duration (PT20S)
+     * CALLCULON_REQUEST_TIMEOUT = ISO 8601 Duration (PT120S)
+     * </pre>
+     */
+    public static HandlerOptions fromEnvironmentVariables(Map<String, String> env) {
       return HandlerOptions.builder()
-          .connectTimeout(duration("CALLCULON_CONNECT_TIMEOUT", "PT20S"))
-          .requestTimeout(duration("CALLCULON_REQUEST_TIMEOUT", "PT120S"))
+          .connectTimeout(Duration.parse(env.getOrDefault(OPTION_CONNECT_TIMEOUT, "PT20S")))
+          .requestTimeout(Duration.parse(env.getOrDefault(OPTION_REQUEST_TIMEOUT, "PT120S")))
           .build();
     }
   }
@@ -159,10 +171,6 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
 
     public InvalidConfiguration(String message) {
       super(message);
-    }
-
-    public InvalidConfiguration(String message, Throwable cause) {
-      super(message, cause);
     }
 
     static void check(boolean condition, String message) {

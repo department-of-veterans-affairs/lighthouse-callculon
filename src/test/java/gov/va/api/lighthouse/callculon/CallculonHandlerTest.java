@@ -1,6 +1,7 @@
 package gov.va.api.lighthouse.callculon;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpRequest.request;
@@ -14,9 +15,10 @@ import gov.va.api.lighthouse.callculon.CallculonConfiguration.Protocol;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Request;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.RequestMethod;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Slack;
+import gov.va.api.lighthouse.callculon.CallculonHandler.HandlerOptions;
+import gov.va.api.lighthouse.callculon.CallculonHandler.InvalidConfiguration;
 import java.time.Duration;
 import java.util.Map;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -32,20 +34,6 @@ class CallculonHandlerTest {
   @Mock LambdaLogger logger;
   MockServer server;
   MockServerClient mockHttp;
-
-  @BeforeEach
-  void _mockContext() {
-    when(ctx.getLogger()).thenReturn(logger);
-    doAnswer(
-            invocation -> {
-              System.out.println(invocation.getArguments()[0]);
-              return null;
-            })
-        .when(logger)
-        .log(Mockito.anyString());
-    server = new MockServer();
-    mockHttp = new MockServerClient("localhost", server.getLocalPort());
-  }
 
   private CallculonConfiguration config(String path) {
     return CallculonConfiguration.builder()
@@ -89,7 +77,56 @@ class CallculonHandlerTest {
   }
 
   @Test
+  void handlerOptionsFromEnvironmentVariablesUseDefaultValues() {
+    var env = Map.of("NOPE", "WHATEVER");
+    var opts = HandlerOptions.fromEnvironmentVariables(env);
+    assertThat(opts.connectTimeout()).isEqualTo(Duration.ofSeconds(20));
+    assertThat(opts.requestTimeout()).isEqualTo(Duration.ofSeconds(120));
+  }
+
+  @Test
+  void handlerOptionsFromEnvironmentVariablesUsesEnvValues() {
+    var env =
+        Map.of(
+            HandlerOptions.OPTION_CONNECT_TIMEOUT,
+            "PT99S",
+            HandlerOptions.OPTION_REQUEST_TIMEOUT,
+            "PT33S");
+    var opts = HandlerOptions.fromEnvironmentVariables(env);
+    assertThat(opts.connectTimeout()).isEqualTo(Duration.ofSeconds(99));
+    assertThat(opts.requestTimeout()).isEqualTo(Duration.ofSeconds(33));
+  }
+
+  @Test
+  void missingHostnameConfigurationThrowsExceptions() {
+    startMockServer();
+    CallculonConfiguration event = config("/whatever");
+    event.getRequest().setHostname(null);
+    assertThatExceptionOfType(InvalidConfiguration.class)
+        .isThrownBy(() -> handler().handleRequest(event, ctx));
+  }
+
+  @Test
+  void missingPathConfigurationThrowsExceptions() {
+    startMockServer();
+    CallculonConfiguration event = config("/whatever");
+    event.getRequest().setPath(null);
+    assertThatExceptionOfType(InvalidConfiguration.class)
+        .isThrownBy(() -> handler().handleRequest(event, ctx));
+  }
+
+  @Test
+  void missingPortConfigurationThrowsExceptions() {
+    startMockServer();
+    CallculonConfiguration event = config("/whatever");
+    event.getRequest().setPort(0);
+    assertThatExceptionOfType(InvalidConfiguration.class)
+        .isThrownBy(() -> handler().handleRequest(event, ctx));
+  }
+
+  @Test
   void notOkResponse() {
+    startMockServer();
     mockHttp
         .when(request().withPath("/teapot"))
         .respond(response().withStatusCode(419).withBody("i'm a teapot."));
@@ -104,6 +141,7 @@ class CallculonHandlerTest {
 
   @Test
   void okResponse() {
+    startMockServer();
     mockHttp
         .when(request().withPath("/ok"))
         .respond(response().withStatusCode(200).withBody("Good job buddy!"));
@@ -114,5 +152,18 @@ class CallculonHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(200);
     assertThat(response.getDuration()).isNotNull();
     assertThat(response.getRequestTime()).isNotNull();
+  }
+
+  void startMockServer() {
+    when(ctx.getLogger()).thenReturn(logger);
+    doAnswer(
+            invocation -> {
+              System.out.println(invocation.getArguments()[0]);
+              return null;
+            })
+        .when(logger)
+        .log(Mockito.anyString());
+    server = new MockServer();
+    mockHttp = new MockServerClient("localhost", server.getLocalPort());
   }
 }
