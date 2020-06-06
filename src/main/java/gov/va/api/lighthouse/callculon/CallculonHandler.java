@@ -31,6 +31,11 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
 
   private final HttpClient client;
 
+  /** Create a new instance initialing options from environment variables if available. */
+  public CallculonHandler() {
+    this(null);
+  }
+
   /**
    * Create a new instance from options (or not... whatever) If no options are specified, they will
    * be picked from environment variables, or we'll just assume some defaults if environment
