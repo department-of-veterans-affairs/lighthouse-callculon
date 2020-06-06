@@ -21,7 +21,9 @@ deploy() {
   local handler=gov.va.api.lighthouse.callculon.CallculonHandler
   local timeout=120
   local memorySize=512
-  local jar=$(find target/ -name "callculon-*.jar" -print -quit)
+  local jar=$(find target/ -name "callculon-*.jar" | sort -r | head -1)
+
+  echo "Deploying $name with $jar"
   
 # TODO VPC/SUBNET CONFIGURATION
   if getFunction $name
