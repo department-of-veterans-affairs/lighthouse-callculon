@@ -106,6 +106,7 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
 
     CallculonResponse result =
         CallculonResponse.builder()
+            .configuration(config)
             .statusCode(response.statusCode())
             .requestTime(start.toString())
             .duration(requestDuration.toString())
