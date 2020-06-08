@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+OUT=target/invoke.out
+
+
+aws lambda invoke \
+  --function-name project-callculon \
+  --cli-binary-format raw-in-base64-out \
+  --payload "$(jq -c . payload.json)" \
+  $OUT
+
+jq . $OUT

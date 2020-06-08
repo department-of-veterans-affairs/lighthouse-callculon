@@ -12,13 +12,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CallculonConfiguration {
 
-  String name;
-  Deployment deployment;
-  Request request;
-  Notification notification;
+  private String name;
+  private Deployment deployment;
+  private Request request;
+  private Notification notification;
 
   public enum RequestMethod {
     GET
+  }
+
+  public enum Protocol {
+    HTTP,
+    HTTPS
   }
 
   @Data
@@ -26,11 +31,11 @@ public class CallculonConfiguration {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Deployment {
-    boolean enabled;
-    String cron;
-    String product;
-    String version;
-    String id;
+    private boolean enabled;
+    private String cron;
+    private String product;
+    private String version;
+    private String id;
   }
 
   @Data
@@ -38,7 +43,7 @@ public class CallculonConfiguration {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Notification {
-    Slack slack;
+    private Slack slack;
   }
 
   @Data
@@ -46,11 +51,12 @@ public class CallculonConfiguration {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Request {
-    String hostname;
-    int port;
-    String path;
-    RequestMethod method;
-    Map<String, String> headers;
+    private Protocol protocol;
+    private String hostname;
+    private int port;
+    private String path;
+    private RequestMethod method;
+    private Map<String, String> headers;
   }
 
   @Data
@@ -58,9 +64,9 @@ public class CallculonConfiguration {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class Slack {
-    String webhook;
-    String channel;
     @Builder.Default boolean onFailure = true;
     @Builder.Default boolean onSuccess = false;
+    private String webhook;
+    private String channel;
   }
 }

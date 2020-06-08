@@ -8,6 +8,7 @@
     "id": "0-callculon-manual-test-0-0-0-000"
   },
   "request": {
+    "protocol" : "HTTPS",
     "hostname": "api.va.gov",
     "port": 443,
     "path": "/services/fhir/v0/dstu2/metadata",
