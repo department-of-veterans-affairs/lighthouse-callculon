@@ -43,6 +43,7 @@ public interface SecretProcessor extends Function<String, String> {
         Pattern.compile("(^|\\p{Punct}|\\s|\\G)" + identifier() + "\\(\\s*([^\\s]+?)\\s*\\)");
     Scanner scanner = new Scanner(configValue);
     List<MatchResult> matches = scanner.findAll(pattern).collect(toList());
+    scanner.close();
     /* If there are no secrets, then dip on out. */
     if (matches.isEmpty()) {
       checkForInvalidSecretSpecifications(configValue, configValue);
