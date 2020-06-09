@@ -18,6 +18,7 @@ import gov.va.api.lighthouse.callculon.CallculonConfiguration.Slack;
 import gov.va.api.lighthouse.callculon.CallculonHandler.HandlerOptions;
 import gov.va.api.lighthouse.callculon.CallculonHandler.InvalidConfiguration;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,11 +70,26 @@ class CallculonHandlerTest {
   }
 
   private CallculonHandler handler() {
-    return new CallculonHandler(
-        CallculonHandler.HandlerOptions.builder()
-            .connectTimeout(Duration.ofSeconds(5))
-            .requestTimeout(Duration.ofSeconds(10))
-            .build());
+
+    return CallculonHandler.builder()
+        .options(
+            CallculonHandler.HandlerOptions.builder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .requestTimeout(Duration.ofSeconds(10))
+                .build())
+        .secretProcessor(
+            new SecretProcessor() {
+              @Override
+              public String identifier() {
+                return "topsecret";
+              }
+
+              @Override
+              public List<String> lookup(List<String> secrets) {
+                return secrets;
+              }
+            })
+        .build();
   }
 
   @Test
@@ -152,6 +168,26 @@ class CallculonHandlerTest {
     assertThat(response.getStatusCode()).isEqualTo(200);
     assertThat(response.getDuration()).isNotNull();
     assertThat(response.getRequestTime()).isNotNull();
+  }
+
+  @Test
+  void secretSubstitutionIsPerformedOnPathAndHeaders() {
+    startMockServer();
+    mockHttp
+        .when(request().withPath("/wow").withHeader("neato", "a b").withHeader("bandito", "c"))
+        .respond(response().withStatusCode(200).withBody("nice"));
+
+    CallculonConfiguration event = config("/topsecret(wow)");
+    event
+        .getRequest()
+        .setHeaders(
+            Map.of(
+                "neato", "topsecret(a) topsecret(b)",
+                "bandito", "topsecret(c)"));
+
+    CallculonResponse response = handler().handleRequest(event, ctx);
+    assertThat(response).isNotNull();
+    assertThat(response.getStatusCode()).isEqualTo(200);
   }
 
   void startMockServer() {
