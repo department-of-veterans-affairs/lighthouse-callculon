@@ -11,10 +11,10 @@
     "protocol" : "HTTPS",
     "hostname": "api.va.gov",
     "port": 443,
-    "path": "/services/fhir/v0/dstu2/metadata",
+    "path": "/services/fhir/v0/dstu2/Patient/1011537977V693883",
     "method": "GET",
     "headers": {
-       "not-needed": "but-ok"
+       "Authorization": "Bearer aws-secret(/dvp/production/health/static-access-token)"
      }
   },
   "notification": {
