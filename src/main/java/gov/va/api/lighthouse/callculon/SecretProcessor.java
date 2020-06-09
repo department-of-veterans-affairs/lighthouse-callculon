@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * Responsible for processing a value in the configuration and performing substitution on it or
  * otherwise modifying. The result of applying this function will be used a the new value.
  */
-public interface SecretProcesor extends Function<String, String> {
+public interface SecretProcessor extends Function<String, String> {
 
   /**
    * Based on a configuration value, this apply will parse out secret tokens, collect them and

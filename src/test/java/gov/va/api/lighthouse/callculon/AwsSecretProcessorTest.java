@@ -12,6 +12,17 @@ import software.amazon.awssdk.services.ssm.model.Parameter;
 
 class AwsSecretProcessorTest {
 
+  static Function<GetParametersRequest, GetParametersResponse> mockParameters(
+      Map<String, String> secrets) {
+    return request ->
+        GetParametersResponse.builder()
+            .parameters(
+                secrets.entrySet().stream()
+                    .map(e -> Parameter.builder().name(e.getKey()).value(e.getValue()).build())
+                    .collect(Collectors.toList()))
+            .build();
+  }
+
   @Test
   void canPerformLookups() {
     String result =
@@ -35,14 +46,8 @@ class AwsSecretProcessorTest {
     assertThat(result).isEqualTo("ay!I lost me eye!");
   }
 
-  private Function<GetParametersRequest, GetParametersResponse> mockParameters(
-      Map<String, String> secrets) {
-    return request ->
-        GetParametersResponse.builder()
-            .parameters(
-                secrets.entrySet().stream()
-                    .map(e -> Parameter.builder().name(e.getKey()).value(e.getValue()).build())
-                    .collect(Collectors.toList()))
-            .build();
+  @Test
+  void defaultInstanceReturnsReadyToUseProcessor() {
+    assertThat(AwsSecretProcessor.defaultInstance()).isNotNull();
   }
 }

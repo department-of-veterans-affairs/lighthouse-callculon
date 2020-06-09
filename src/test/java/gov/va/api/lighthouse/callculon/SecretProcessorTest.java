@@ -4,16 +4,16 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import gov.va.api.lighthouse.callculon.SecretProcesor.InvalidSecretSpecification;
-import gov.va.api.lighthouse.callculon.SecretProcesor.MissingLookupValue;
+import gov.va.api.lighthouse.callculon.SecretProcessor.InvalidSecretSpecification;
+import gov.va.api.lighthouse.callculon.SecretProcessor.MissingLookupValue;
 import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.Test;
 
-class SecretProcesorTest {
+class SecretProcessorTest {
 
-  private static final SecretProcesor UPCASE =
-      new SecretProcesor() {
+  private static final SecretProcessor UPCASE =
+      new SecretProcessor() {
         @Override
         public String identifier() {
           return "up";
@@ -55,8 +55,8 @@ class SecretProcesorTest {
 
   @Test
   void notEnoughValuesThrowsException() {
-    SecretProcesor whoops =
-        new SecretProcesor() {
+    SecretProcessor whoops =
+        new SecretProcessor() {
           @Override
           public String identifier() {
             return "whoops";

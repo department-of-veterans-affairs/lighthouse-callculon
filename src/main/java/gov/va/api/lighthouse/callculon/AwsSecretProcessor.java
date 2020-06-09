@@ -13,7 +13,7 @@ import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 
-public class AwsSecretProcessor implements SecretProcesor {
+public class AwsSecretProcessor implements SecretProcessor {
 
   private final Function<GetParametersRequest, GetParametersResponse> ssmInvoker;
 
@@ -26,6 +26,11 @@ public class AwsSecretProcessor implements SecretProcesor {
   @Builder
   public AwsSecretProcessor(Function<GetParametersRequest, GetParametersResponse> ssmInvoker) {
     this.ssmInvoker = ssmInvoker == null ? defaultSsmInvoker() : ssmInvoker;
+  }
+
+  /** Create a new default instance. */
+  public static AwsSecretProcessor defaultInstance() {
+    return AwsSecretProcessor.builder().build();
   }
 
   private static Function<GetParametersRequest, GetParametersResponse> defaultSsmInvoker() {

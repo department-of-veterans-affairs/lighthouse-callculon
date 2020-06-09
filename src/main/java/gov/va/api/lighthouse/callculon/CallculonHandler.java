@@ -31,9 +31,11 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
 
   private final HttpClient client;
 
+  private final SecretProcessor secretProcessor;
+
   /** Create a new instance initialing options from environment variables if available. */
   public CallculonHandler() {
-    this(null);
+    this(null, null);
   }
 
   /**
@@ -42,17 +44,30 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
    * variables are not available.
    */
   @Builder
-  public CallculonHandler(HandlerOptions maybeOptions) {
-    this.options = maybeOptions == null ? HandlerOptions.fromEnvironmentVariables() : maybeOptions;
+  public CallculonHandler(HandlerOptions options, SecretProcessor secretProcessor) {
+    this.options = options == null ? HandlerOptions.fromEnvironmentVariables() : options;
+    this.secretProcessor =
+        secretProcessor == null ? AwsSecretProcessor.defaultInstance() : secretProcessor;
     this.client =
         HttpClient.newBuilder()
             .followRedirects(Redirect.NEVER)
-            .connectTimeout(options.connectTimeout())
+            .connectTimeout(this.options.connectTimeout())
             .build();
   }
 
+  private HttpRequest asHttpRequest(Request request) {
+    HttpRequest.Builder builder = HttpRequest.newBuilder();
+    builder.GET();
+    builder.uri(asUri(request));
+    if (request.getHeaders() != null) {
+      request.getHeaders().forEach((name, value) -> builder.header(name, secret(value)));
+    }
+    builder.timeout(options.requestTimeout());
+    return builder.build();
+  }
+
   @SneakyThrows
-  private static URI asUri(Request request) {
+  private URI asUri(Request request) {
     check(request.getHostname() != null, "missing hostname");
     check(request.getPath() != null, "missing path");
     check(request.getPort() > 0, "missing port");
@@ -61,27 +76,11 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
             .orElse(Protocol.HTTPS)
             .toString()
             .toLowerCase(Locale.ENGLISH);
-    String separator = request.getPath().startsWith("/") ? "" : "/";
+    String secretPath = secret(request.getPath());
+    String separator = secretPath.startsWith("/") ? "" : "/";
     String url =
-        protocol
-            + "://"
-            + request.getHostname()
-            + ":"
-            + request.getPort()
-            + separator
-            + request.getPath();
+        protocol + "://" + request.getHostname() + ":" + request.getPort() + separator + secretPath;
     return new URL(url).toURI();
-  }
-
-  private HttpRequest asHttpRequest(Request request) {
-    HttpRequest.Builder builder = HttpRequest.newBuilder();
-    builder.GET();
-    builder.uri(asUri(request));
-    if (request.getHeaders() != null) {
-      request.getHeaders().forEach(builder::header);
-    }
-    builder.timeout(options.requestTimeout());
-    return builder.build();
   }
 
   @Override
@@ -119,6 +118,10 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
 
   private boolean isOk(HttpResponse<String> response) {
     return response.statusCode() < 200 || response.statusCode() > 299;
+  }
+
+  private String secret(String configValue) {
+    return secretProcessor.apply(configValue);
   }
 
   String titleOf(CallculonConfiguration config) {
