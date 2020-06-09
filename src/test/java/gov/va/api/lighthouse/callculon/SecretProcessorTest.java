@@ -26,6 +26,23 @@ class SecretProcessorTest {
       };
 
   @Test
+  void aValueWithNoSecretsIsNotProcessed() {
+    SecretProcessor betterNot =
+        new SecretProcessor() {
+          @Override
+          public String identifier() {
+            return "nope";
+          }
+
+          @Override
+          public List<String> lookup(List<String> secrets) {
+            throw new AssertionError("should not have been invoked");
+          }
+        };
+    assertThat(betterNot.apply("no secrets")).isEqualTo("no secrets");
+  }
+
+  @Test
   void conversion() {
     assertThat(UPCASE.apply("up(awesome)")).isEqualTo("AWESOME");
     assertThat(UPCASE.apply("An up(awesome) up(possum)!")).isEqualTo("An AWESOME POSSUM!");

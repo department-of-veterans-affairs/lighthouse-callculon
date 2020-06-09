@@ -43,6 +43,10 @@ public interface SecretProcessor extends Function<String, String> {
         Pattern.compile("(^|\\p{Punct}|\\s|\\G)" + identifier() + "\\(\\s*([^\\s]+?)\\s*\\)");
     Scanner scanner = new Scanner(configValue);
     List<MatchResult> matches = scanner.findAll(pattern).collect(toList());
+    /* If there are no secrets, then dip on out. */
+    if (matches.isEmpty()) {
+      return configValue;
+    }
     List<String> leadingWhitespace = matches.stream().map(m -> m.group(1)).collect(toList());
     List<String> secrets = matches.stream().map(m -> m.group(2)).collect(toList());
     List<String> values = lookup(secrets);
