@@ -49,7 +49,7 @@ public interface SecretProcessor extends Function<String, String> {
       checkForInvalidSecretSpecifications(configValue, configValue);
       return configValue;
     }
-    List<String> leadingWhitespace = matches.stream().map(m -> m.group(1)).collect(toList());
+    List<String> leadingSeparators = matches.stream().map(m -> m.group(1)).collect(toList());
     List<String> secrets = matches.stream().map(m -> m.group(2)).collect(toList());
     List<String> values = lookup(secrets);
     if (values.size() != secrets.size()) {
@@ -65,7 +65,7 @@ public interface SecretProcessor extends Function<String, String> {
       MatchResult secretMatch = matches.get(i);
       result =
           result.substring(0, secretMatch.start())
-              + leadingWhitespace.get(i)
+              + leadingSeparators.get(i)
               + values.get(i)
               + result.substring(secretMatch.end());
     }
