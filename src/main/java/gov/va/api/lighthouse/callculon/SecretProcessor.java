@@ -45,6 +45,7 @@ public interface SecretProcessor extends Function<String, String> {
     List<MatchResult> matches = scanner.findAll(pattern).collect(toList());
     /* If there are no secrets, then dip on out. */
     if (matches.isEmpty()) {
+      checkForInvalidSecretSpecifications(configValue, configValue);
       return configValue;
     }
     List<String> leadingWhitespace = matches.stream().map(m -> m.group(1)).collect(toList());
@@ -67,16 +68,29 @@ public interface SecretProcessor extends Function<String, String> {
               + values.get(i)
               + result.substring(secretMatch.end());
     }
+    /*
+     * One final check to make sure we don't have a case where a value had some valid and some
+     * invalid secrets.
+     */
+    checkForInvalidSecretSpecifications(configValue, result);
 
+    return result;
+  }
+
+  /**
+   * Look for any partially defined secrets in the currentConfigValue. If found, an error with the
+   * originalConfigValue will be emitted. The original value is used to protect any secrets that
+   * might have been successfully processed.
+   */
+  private void checkForInvalidSecretSpecifications(
+      String originalConfigValue, String currentConfigValue) {
     /*
      * If the secret token is still partially there, then it wasn't specified correctly. For
      * example, 'foo(' or 'foo(bar' are missing closing braces.
      */
-    if (result.matches("(^|.*\\p{Punct}|.*\\s)" + identifier() + "\\(.*")) {
-      throw new InvalidSecretSpecification(configValue);
+    if (currentConfigValue.matches("(^|.*\\p{Punct}|.*\\s)" + identifier() + "\\(.*")) {
+      throw new InvalidSecretSpecification(originalConfigValue);
     }
-
-    return result;
   }
 
   /**

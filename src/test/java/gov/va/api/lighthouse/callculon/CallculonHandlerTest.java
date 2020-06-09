@@ -24,9 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.mockserver.MockServer;
 
@@ -35,7 +33,6 @@ class CallculonHandlerTest {
 
   @Mock Context ctx;
   @Mock LambdaLogger logger;
-  @Mock SecretProcessor secretProcessor;
   MockServer server;
   MockServerClient mockHttp;
 
@@ -73,13 +70,25 @@ class CallculonHandlerTest {
   }
 
   private CallculonHandler handler() {
+
     return CallculonHandler.builder()
         .options(
             CallculonHandler.HandlerOptions.builder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .requestTimeout(Duration.ofSeconds(10))
                 .build())
-        .secretProcessor(secretProcessor)
+        .secretProcessor(
+            new SecretProcessor() {
+              @Override
+              public String identifier() {
+                return "topsecret";
+              }
+
+              @Override
+              public List<String> lookup(List<String> secrets) {
+                return secrets;
+              }
+            })
         .build();
   }
 
@@ -131,23 +140,9 @@ class CallculonHandlerTest {
         .isThrownBy(() -> handler().handleRequest(event, ctx));
   }
 
-  void mockSecrets() {
-    when(secretProcessor.identifier()).thenReturn("topsecret");
-    when(secretProcessor.apply(Mockito.anyString())).thenCallRealMethod();
-    when(secretProcessor.lookup(Mockito.anyList()))
-        .thenAnswer(
-            new Answer<List<String>>() {
-              @Override
-              public List<String> answer(InvocationOnMock invocation) throws Throwable {
-                return (List<String>) invocation.getArguments()[0];
-              }
-            });
-  }
-
   @Test
   void notOkResponse() {
     startMockServer();
-    mockSecrets();
     mockHttp
         .when(request().withPath("/teapot"))
         .respond(response().withStatusCode(419).withBody("i'm a teapot."));
@@ -163,7 +158,6 @@ class CallculonHandlerTest {
   @Test
   void okResponse() {
     startMockServer();
-    mockSecrets();
     mockHttp
         .when(request().withPath("/ok"))
         .respond(response().withStatusCode(200).withBody("Good job buddy!"));
@@ -179,7 +173,6 @@ class CallculonHandlerTest {
   @Test
   void secretSubstitutionIsPerformedOnPathAndHeaders() {
     startMockServer();
-    mockSecrets();
     mockHttp
         .when(request().withPath("/wow").withHeader("neato", "a b").withHeader("bandito", "c"))
         .respond(response().withStatusCode(200).withBody("nice"));
