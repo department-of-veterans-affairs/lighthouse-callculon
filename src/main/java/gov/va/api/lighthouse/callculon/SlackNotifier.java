@@ -154,7 +154,7 @@ public class SlackNotifier implements Notifier {
     HttpResponse<String> response =
         invoker.apply(
             HttpRequest.newBuilder()
-                .uri(new URL(slack(ctx).getWebhook()).toURI())
+                .uri(new URL(ctx.getSecretProcessor().apply(slack(ctx).getWebhook())).toURI())
                 .POST(BodyPublishers.ofString(message))
                 .build());
 

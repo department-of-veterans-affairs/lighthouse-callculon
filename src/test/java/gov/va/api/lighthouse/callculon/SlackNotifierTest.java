@@ -14,6 +14,7 @@ import gov.va.api.lighthouse.callculon.Notifier.NotificationContext;
 import gov.va.api.lighthouse.callculon.Notifier.NotificationFailure;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import org.junit.jupiter.api.Tag;
@@ -55,12 +56,27 @@ class SlackNotifierTest {
 
   private NotificationContext failContext(boolean enabled) {
     return NotificationContext.builder()
+        .secretProcessor(noSecrets())
         .url("https://fugazi.com/velocipastor")
         .statusCode(419)
         .note(Optional.of("wow this is the greatest"))
         .logger(logger)
         .config(config(enabled, true))
         .build();
+  }
+
+  private SecretProcessor noSecrets() {
+    return new SecretProcessor() {
+      @Override
+      public String identifier() {
+        return "noop";
+      }
+
+      @Override
+      public List<String> lookup(List<String> secrets) {
+        return secrets;
+      }
+    };
   }
 
   @Test
@@ -73,6 +89,7 @@ class SlackNotifierTest {
   void onFailureDoesNotSendMessageWhenThereIsNoSlackConfiguration() {
     var ctx =
         NotificationContext.builder()
+            .secretProcessor(noSecrets())
             .url("https://fugazi.com/velocipastor")
             .statusCode(419)
             .note(Optional.of("wow this is the greatest"))
@@ -101,6 +118,7 @@ class SlackNotifierTest {
   void onSuccessDoesNotSendMessageWhenThereIsNoSlackConfiguration() {
     var ctx =
         NotificationContext.builder()
+            .secretProcessor(noSecrets())
             .url("https://fugazi.com/velocipastor")
             .statusCode(419)
             .note(Optional.of("wow this is the greatest"))
@@ -134,6 +152,7 @@ class SlackNotifierTest {
 
   private NotificationContext successContext(boolean enabled) {
     return NotificationContext.builder()
+        .secretProcessor(noSecrets())
         .url("https://fugazi.com/velocipastor")
         .statusCode(200)
         .logger(logger)

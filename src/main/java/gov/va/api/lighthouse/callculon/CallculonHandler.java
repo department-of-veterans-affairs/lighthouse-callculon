@@ -100,6 +100,7 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
     var notificationContext =
         NotificationContext.builder()
             .config(config)
+            .secretProcessor(secretProcessor)
             .logger(context.getLogger())
             .url(request.uri().toString())
             .statusCode(response.statusCode())

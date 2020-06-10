@@ -13,6 +13,7 @@ public interface Notifier {
   @Builder
   @Value
   class NotificationContext {
+    SecretProcessor secretProcessor;
     CallculonConfiguration config;
     String url;
     int statusCode;
