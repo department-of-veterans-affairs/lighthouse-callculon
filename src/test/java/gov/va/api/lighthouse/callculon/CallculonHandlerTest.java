@@ -25,6 +25,7 @@ import gov.va.api.lighthouse.callculon.Notifier.NotificationContext;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -229,5 +230,15 @@ class CallculonHandlerTest {
         .log(Mockito.anyString());
     server = new MockServer();
     mockHttp = new MockServerClient("localhost", server.getLocalPort());
+  }
+
+  @AfterEach
+  void stopMockServer() {
+    if (server != null) {
+      server.stop();
+      server.close();
+      mockHttp.stop(true);
+      mockHttp.close();
+    }
   }
 }
