@@ -59,7 +59,6 @@ class SlackNotifierTest {
         .secretProcessor(noSecrets())
         .url("https://fugazi.com/velocipastor")
         .statusCode(419)
-        .note(Optional.of("wow this is the greatest"))
         .logger(logger)
         .config(config(enabled, true))
         .build();
