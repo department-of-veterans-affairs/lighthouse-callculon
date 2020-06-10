@@ -48,7 +48,7 @@ public class SlackNotifier implements Notifier {
    * bold formating.
    */
   private String astericks(String cron) {
-    return cron.replace("*", "＊");
+    return cron.replace("*", "\uFF0A");
   }
 
   private Deployment deployment(NotificationContext ctx) {
@@ -85,17 +85,17 @@ public class SlackNotifier implements Notifier {
                 + "Not enough to make a big deal out of it, "
                 + "but I know everyone saw it. One stunning, gorgeous cartwheel.",
             "The only problem is whenever I try to make a taco, I get too excited and crush it.",
-            "You guys I’m like really smart now. You don’t even know. You could ask me, Kelly "
-                + "what’s the biggest company in the world? And I’d be like, "
-                + "‘blah blah blah, blah blah blah blah blah blah.’ "
+            "You guys I'm like really smart now. You don't even know. You could ask me, Kelly "
+                + "what's the biggest company in the world? And I'd be like, "
+                + "blah blah blah, blah blah blah blah blah blah."
                 + "Giving you the exact right answer.",
             "I am Beyonce, always.",
-            "I’m fast. To give you a reference point. "
-                + "I’m somewhere between a snake and a mongoose. "
+            "I'm fast. To give you a reference point. "
+                + "I'm somewhere between a snake and a mongoose. "
                 + "And a panther.",
             "And I knew exactly what to do. "
                 + "But in a much more real sense, I had no idea what to do.",
-            "I just want to lie on the beach and eat hot dogs. That's all i've ever wanted");
+            "I just want to lie on the beach and eat hot dogs. That's all I've ever wanted");
     return "_" + messages.get(new SecureRandom().nextInt(messages.size())) + "_";
   }
 
