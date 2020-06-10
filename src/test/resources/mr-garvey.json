@@ -1,0 +1,4 @@
+{
+    "student" : "${name}",
+    "warning" : "you done ${verb} ${name}"
+}
