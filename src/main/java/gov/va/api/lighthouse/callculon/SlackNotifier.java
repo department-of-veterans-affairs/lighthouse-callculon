@@ -95,7 +95,7 @@ public class SlackNotifier implements Notifier {
                 + "And a panther.",
             "And I knew exactly what to do. "
                 + "But in a much more real sense, I had no idea what to do.",
-            "I just want to lie on the beach and eat hot dogs. That's all I've ever wanted");
+            "I just want to lie on the beach and eat hot dogs. That's all I've ever wanted.");
     return "_" + messages.get(new SecureRandom().nextInt(messages.size())) + "_";
   }
 

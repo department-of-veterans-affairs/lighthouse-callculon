@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 
 /**
@@ -13,8 +14,8 @@ import lombok.SneakyThrows;
  */
 @Builder
 public class MrGarveyTheSubstitute {
-  private final Map<String, String> substitutions;
-  private final String resource;
+  @NonNull private final Map<String, String> substitutions;
+  @NonNull private final String resource;
 
   @SneakyThrows
   String rollCall() {
