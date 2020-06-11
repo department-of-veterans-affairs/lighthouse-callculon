@@ -106,7 +106,13 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
       note = Optional.empty();
     } catch (IOException e) {
       statusCode = 0;
-      note = Optional.of(e.getClass().getSimpleName() + ":" + e.getMessage());
+      note =
+          Optional.of(
+              "Error `"
+                  + e.getClass().getSimpleName()
+                  + "` with message: _"
+                  + e.getMessage()
+                  + "_");
     }
     var notificationContext =
         NotificationContext.builder()
