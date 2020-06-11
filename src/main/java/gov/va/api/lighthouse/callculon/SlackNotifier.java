@@ -47,7 +47,7 @@ public class SlackNotifier implements Notifier {
    * Replace the standard `*` with something that is not sensitive in slack since it interferes with
    * bold formating.
    */
-  private String astericks(String cron) {
+  private String asterisks(String cron) {
     return cron.replace("*", "\uFF0A");
   }
 
@@ -58,18 +58,21 @@ public class SlackNotifier implements Notifier {
   private String emoji() {
     List<String> emojis =
         List.of(
+            "100",
+            "dagger_knife",
+            "grin",
+            "guitar",
+            "icecream",
+            "motor_scooter",
+            "pizza",
+            "sparkling_heart",
             "sunglasses",
             "taco",
-            "icecream",
-            "trumpet",
-            "grin",
-            "unicorn_face",
-            "guitar",
-            "100",
             "the_horns",
-            "sparkling_heart",
-            "pizza",
-            "motor_scooter");
+            "trumpet",
+            "unicorn_face"
+            //
+            );
     return emojis.get(new SecureRandom().nextInt(emojis.size()));
   }
 
@@ -115,7 +118,7 @@ public class SlackNotifier implements Notifier {
                     "statusCode", String.valueOf(ctx.getStatusCode()),
                     "product", deployment(ctx).getProduct(),
                     "version", deployment(ctx).getVersion(),
-                    "cron", astericks(deployment(ctx).getCron()),
+                    "cron", asterisks(deployment(ctx).getCron()),
                     "deploymentId", deployment(ctx).getId()))
             .build()
             .rollCall();
@@ -140,7 +143,7 @@ public class SlackNotifier implements Notifier {
                     "note", ctx.getNote().orElse(nice()),
                     "product", deployment(ctx).getProduct(),
                     "version", deployment(ctx).getVersion(),
-                    "cron", astericks(deployment(ctx).getCron()),
+                    "cron", asterisks(deployment(ctx).getCron()),
                     "deploymentId", deployment(ctx).getId()))
             .build()
             .rollCall();
