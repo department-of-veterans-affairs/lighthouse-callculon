@@ -1,19 +1,19 @@
 package gov.va.api.lighthouse.callculon;
 
 import static gov.va.api.lighthouse.callculon.CallculonHandler.InvalidConfiguration.check;
+import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Protocol;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Request;
+import gov.va.api.lighthouse.callculon.Notifier.NotificationContext;
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.time.Instant;
@@ -33,9 +33,11 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
 
   private final SecretProcessor secretProcessor;
 
+  private final Notifier notifier;
+
   /** Create a new instance initialing options from environment variables if available. */
   public CallculonHandler() {
-    this(null, null);
+    this(null, null, null);
   }
 
   /**
@@ -44,7 +46,8 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
    * variables are not available.
    */
   @Builder
-  public CallculonHandler(HandlerOptions options, SecretProcessor secretProcessor) {
+  public CallculonHandler(
+      HandlerOptions options, SecretProcessor secretProcessor, Notifier notifier) {
     this.options = options == null ? HandlerOptions.fromEnvironmentVariables() : options;
     this.secretProcessor =
         secretProcessor == null ? AwsSecretProcessor.defaultInstance() : secretProcessor;
@@ -53,6 +56,7 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
             .followRedirects(Redirect.NEVER)
             .connectTimeout(this.options.connectTimeout())
             .build();
+    this.notifier = notifier == null ? SlackNotifier.defaultInstance() : notifier;
   }
 
   private HttpRequest asHttpRequest(Request request) {
@@ -86,42 +90,67 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
   @Override
   @SneakyThrows
   public CallculonResponse handleRequest(CallculonConfiguration config, Context context) {
-    LambdaLogger logger = context.getLogger();
-    logger.log(titleOf(config));
-    HttpRequest request = asHttpRequest(config.getRequest());
-    logger.log("Requesting " + request.uri());
-    Instant start = Instant.now();
-    HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-    Duration requestDuration = Duration.between(start, Instant.now());
-    logger.log(
-        "Response is " + response.statusCode() + " in " + requestDuration.toMillis() + " millis");
-    if (isOk(response)) {
-      logger.log("YAY!");
-      // TODO send success notification if configured
-    } else {
-      logger.log("Request failed.");
-      // TODO send failure notification
-    }
+    context.getLogger().log(titleOf(config));
+    var start = Instant.now();
+
+    var request = asHttpRequest(config.getRequest());
+    context.getLogger().log("Requesting " + request.uri());
+
+    var response = client.send(request, BodyHandlers.ofString());
+    var notificationContext =
+        NotificationContext.builder()
+            .config(config)
+            .secretProcessor(secretProcessor)
+            .logger(context.getLogger())
+            .url(request.uri().toString())
+            .statusCode(response.statusCode())
+            .build();
+    var requestDuration = Duration.between(start, Instant.now());
+    context
+        .getLogger()
+        .log(
+            format(
+                "Response is %d, call took %d ms",
+                notificationContext.getStatusCode(), requestDuration.toMillis()));
+
+    var notificationStatus = sendNotifications(notificationContext);
 
     CallculonResponse result =
         CallculonResponse.builder()
             .configuration(config)
-            .statusCode(response.statusCode())
+            .statusCode(notificationContext.getStatusCode())
             .requestTime(start.toString())
             .duration(requestDuration.toString())
-            .notificationError(true) // TODO populate once sending notifications
+            .notificationError(notificationStatus == NotificationStatus.ERROR)
             .build();
 
-    logger.log("" + result);
+    context.getLogger().log(result.toString());
     return result;
   }
 
-  private boolean isOk(HttpResponse<String> response) {
-    return response.statusCode() < 200 || response.statusCode() > 299;
+  private boolean isOk(int statusCode) {
+    return statusCode >= 200 && statusCode < 300;
   }
 
   private String secret(String configValue) {
     return secretProcessor.apply(configValue);
+  }
+
+  private NotificationStatus sendNotifications(NotificationContext notificationContext) {
+    try {
+      if (isOk(notificationContext.getStatusCode())) {
+        notifier.onSuccess(notificationContext);
+      } else {
+        notifier.onFailure(notificationContext);
+      }
+      return NotificationStatus.OK;
+    } catch (Exception e) {
+      notificationContext.getLogger().log("Failed to send notification.");
+      notificationContext
+          .getLogger()
+          .log(e.getClass().getSimpleName() + ": " + e.getLocalizedMessage());
+      return NotificationStatus.ERROR;
+    }
   }
 
   String titleOf(CallculonConfiguration config) {
@@ -133,6 +162,11 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
         + ' '
         + config.getDeployment().getVersion()
         + ")";
+  }
+
+  enum NotificationStatus {
+    OK,
+    ERROR
   }
 
   @Builder

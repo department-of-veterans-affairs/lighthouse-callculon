@@ -17,6 +17,14 @@ public class CallculonConfiguration {
   private Request request;
   private Notification notification;
 
+  /** Get notification, creating a default empty value of necessary. */
+  public Notification getNotification() {
+    if (notification == null) {
+      notification = Notification.builder().build();
+    }
+    return notification;
+  }
+
   public enum RequestMethod {
     GET
   }

@@ -2,7 +2,11 @@ package gov.va.api.lighthouse.callculon;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
@@ -17,9 +21,11 @@ import gov.va.api.lighthouse.callculon.CallculonConfiguration.RequestMethod;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Slack;
 import gov.va.api.lighthouse.callculon.CallculonHandler.HandlerOptions;
 import gov.va.api.lighthouse.callculon.CallculonHandler.InvalidConfiguration;
+import gov.va.api.lighthouse.callculon.Notifier.NotificationContext;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -35,6 +41,7 @@ class CallculonHandlerTest {
   @Mock LambdaLogger logger;
   MockServer server;
   MockServerClient mockHttp;
+  @Mock Notifier notifier;
 
   private CallculonConfiguration config(String path) {
     return CallculonConfiguration.builder()
@@ -70,7 +77,6 @@ class CallculonHandlerTest {
   }
 
   private CallculonHandler handler() {
-
     return CallculonHandler.builder()
         .options(
             CallculonHandler.HandlerOptions.builder()
@@ -89,6 +95,7 @@ class CallculonHandlerTest {
                 return secrets;
               }
             })
+        .notifier(notifier)
         .build();
   }
 
@@ -146,13 +153,33 @@ class CallculonHandlerTest {
     mockHttp
         .when(request().withPath("/teapot"))
         .respond(response().withStatusCode(419).withBody("i'm a teapot."));
-    String path = "/teapot";
-    CallculonConfiguration event = config(path);
+    CallculonConfiguration event = config("/teapot");
     CallculonResponse response = handler().handleRequest(event, ctx);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(419);
     assertThat(response.getDuration()).isNotNull();
     assertThat(response.getRequestTime()).isNotNull();
+    assertThat(response.isNotificationError()).isFalse();
+    verify(notifier).onFailure(any(NotificationContext.class));
+    verifyNoMoreInteractions(notifier);
+  }
+
+  @Test
+  void notificationErrorIsMarkedInResponse() {
+    startMockServer();
+    mockHttp
+        .when(request().withPath("/teapot"))
+        .respond(response().withStatusCode(419).withBody("i'm a teapot."));
+    doThrow(new RuntimeException("fugazi"))
+        .when(notifier)
+        .onFailure(any(NotificationContext.class));
+    CallculonConfiguration event = config("/teapot");
+    CallculonResponse response = handler().handleRequest(event, ctx);
+    assertThat(response).isNotNull();
+    assertThat(response.getStatusCode()).isEqualTo(419);
+    assertThat(response.getDuration()).isNotNull();
+    assertThat(response.getRequestTime()).isNotNull();
+    assertThat(response.isNotificationError()).isTrue();
   }
 
   @Test
@@ -161,13 +188,15 @@ class CallculonHandlerTest {
     mockHttp
         .when(request().withPath("/ok"))
         .respond(response().withStatusCode(200).withBody("Good job buddy!"));
-    String path = "/ok";
-    CallculonConfiguration event = config(path);
+    CallculonConfiguration event = config("/ok");
     CallculonResponse response = handler().handleRequest(event, ctx);
     assertThat(response).isNotNull();
     assertThat(response.getStatusCode()).isEqualTo(200);
     assertThat(response.getDuration()).isNotNull();
     assertThat(response.getRequestTime()).isNotNull();
+    assertThat(response.isNotificationError()).isFalse();
+    verify(notifier).onSuccess(any(NotificationContext.class));
+    verifyNoMoreInteractions(notifier);
   }
 
   @Test
@@ -201,5 +230,15 @@ class CallculonHandlerTest {
         .log(Mockito.anyString());
     server = new MockServer();
     mockHttp = new MockServerClient("localhost", server.getLocalPort());
+  }
+
+  @AfterEach
+  void stopMockServer() {
+    if (server != null) {
+      server.stop();
+      server.close();
+      mockHttp.stop(true);
+      mockHttp.close();
+    }
   }
 }

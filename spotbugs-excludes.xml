@@ -1,3 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
+  <!--
+  Generated hashCode and equals still perform null check.
+  -->
+  <Match>
+    <Class name="gov.va.api.lighthouse.callculon.CallculonConfiguration"/>
+    <Or>
+      <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+    </Or>
+  </Match>
+  <!--
+  There are no null checks in this method... what are you doing Spotbugs?
+  -->
+  <Match>
+    <Class name="gov.va.api.lighthouse.callculon.MrGarveyTheSubstitute"/>
+    <Method name="rollCall"/>
+    <Or>
+      <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+    </Or>
+  </Match>
 </FindBugsFilter>
