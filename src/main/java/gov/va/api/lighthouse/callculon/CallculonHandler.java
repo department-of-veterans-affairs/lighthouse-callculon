@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Protocol;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Request;
 import gov.va.api.lighthouse.callculon.Notifier.NotificationContext;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -96,14 +98,24 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
     var request = asHttpRequest(config.getRequest());
     context.getLogger().log("Requesting " + request.uri());
 
-    var response = client.send(request, BodyHandlers.ofString());
+    Optional<String> note;
+    int statusCode;
+    try {
+      var response = client.send(request, BodyHandlers.ofString());
+      statusCode = response.statusCode();
+      note = Optional.empty();
+    } catch (IOException e) {
+      statusCode = 0;
+      note = Optional.of(e.getClass().getSimpleName() + ":" + e.getMessage());
+    }
     var notificationContext =
         NotificationContext.builder()
             .config(config)
             .secretProcessor(secretProcessor)
             .logger(context.getLogger())
             .url(request.uri().toString())
-            .statusCode(response.statusCode())
+            .statusCode(statusCode)
+            .note(note)
             .build();
     var requestDuration = Duration.between(start, Instant.now());
     context

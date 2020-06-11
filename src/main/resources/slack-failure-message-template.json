@@ -20,6 +20,15 @@
       "elements" : [
         {
           "type" : "mrkdwn",
+          "text" : "${note}"
+        }
+      ]
+    },
+    {
+      "type" : "context",
+      "elements" : [
+        {
+          "type" : "mrkdwn",
           "text" : "*${product} ${version}* is scheduled as *${cron}* and was deployed by *${deploymentId}*"
         }
       ]

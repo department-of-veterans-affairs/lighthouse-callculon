@@ -116,6 +116,7 @@ public class SlackNotifier implements Notifier {
                     "name", ctx.getConfig().getName(),
                     "url", ctx.getUrl(),
                     "statusCode", String.valueOf(ctx.getStatusCode()),
+                    "note", ctx.getNote().orElse("HTTP status " + ctx.getStatusCode()),
                     "product", deployment(ctx).getProduct(),
                     "version", deployment(ctx).getVersion(),
                     "cron", asterisks(deployment(ctx).getCron()),
