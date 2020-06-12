@@ -5,7 +5,7 @@
       "type" : "section",
       "text" : {
         "type" : "mrkdwn",
-        "text" : ":x: Call for *${name}* failed with *${statusCode}* response."
+        "text" : ":x: *ERROR*: Call for *${name}* failed with *${statusCode}* response."
       }
     },
     {

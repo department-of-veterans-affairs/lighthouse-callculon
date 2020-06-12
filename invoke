@@ -4,9 +4,9 @@ OUT=target/invoke.out
 
 
 aws lambda invoke \
-  --function-name project-callculon \
+  --function-name project-qa-callculon \
   --cli-binary-format raw-in-base64-out \
-  --payload "$(jq -c . payload.json)" \
+  --payload "$(jq -c . ${1:-payload.json})" \
   $OUT
 
 jq . $OUT
