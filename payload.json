@@ -14,7 +14,7 @@
     "path": "/fhir/v0/dstu2/Patient/1011537977V693883",
     "method": "GET",
     "headers": {
-      "xAuthorization": "Bearer aws-secret(/dvp/production/health/static-access-token)"
+      "Authorization": "Bearer aws-secret(/dvp/production/health/static-access-token)"
     }
   },
   "notification": {
