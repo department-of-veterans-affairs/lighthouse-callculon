@@ -37,7 +37,10 @@ public class SlackNotifier implements Notifier {
 
   private static HttpResponse<String> defaultInvoker(HttpRequest request) {
     try {
-      return HttpClient.newHttpClient().send(request, BodyHandlers.ofString());
+      return HttpClient.newBuilder()
+          .sslContext(SecurityContexts.relaxed())
+          .build()
+          .send(request, BodyHandlers.ofString());
     } catch (InterruptedException | IOException e) {
       throw new NotificationFailure(e);
     }

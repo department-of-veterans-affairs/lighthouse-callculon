@@ -57,6 +57,7 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
         HttpClient.newBuilder()
             .followRedirects(Redirect.NEVER)
             .connectTimeout(this.options.connectTimeout())
+            .sslContext(SecurityContexts.relaxed())
             .build();
     this.notifier = notifier == null ? SlackNotifier.defaultInstance() : notifier;
   }
