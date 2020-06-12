@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -22,9 +23,14 @@ import gov.va.api.lighthouse.callculon.CallculonConfiguration.Slack;
 import gov.va.api.lighthouse.callculon.CallculonHandler.HandlerOptions;
 import gov.va.api.lighthouse.callculon.CallculonHandler.InvalidConfiguration;
 import gov.va.api.lighthouse.callculon.Notifier.NotificationContext;
+import java.io.IOException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse.BodyHandler;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +48,16 @@ class CallculonHandlerTest {
   MockServer server;
   MockServerClient mockHttp;
   @Mock Notifier notifier;
+
+  @AfterEach
+  void _stopMockServer() {
+    if (server != null) {
+      server.stop();
+      server.close();
+      mockHttp.stop(true);
+      mockHttp.close();
+    }
+  }
 
   private CallculonConfiguration config(String path) {
     return CallculonConfiguration.builder()
@@ -69,11 +85,40 @@ class CallculonHandlerTest {
                 .protocol(Protocol.HTTP)
                 .hostname("localhost")
                 .path(path)
-                .port(server.getLocalPort())
+                .port(server == null ? 80 : server.getLocalPort())
                 .method(RequestMethod.GET)
                 .headers(Map.of("taco", "tuesday"))
                 .build())
         .build();
+  }
+
+  @Test
+  @SneakyThrows
+  void errorSendingRequestIsMarkedAsFailedRequest() {
+    HttpClient client = mock(HttpClient.class);
+    when(client.send(any(HttpRequest.class), any(BodyHandler.class)))
+        .thenThrow(new IOException("fugazi"));
+    when(ctx.getLogger()).thenReturn(logger);
+
+    var explodingHandler =
+        CallculonHandler.builder()
+            .options(
+                CallculonHandler.HandlerOptions.builder()
+                    .connectTimeout(Duration.ofSeconds(5))
+                    .requestTimeout(Duration.ofSeconds(10))
+                    .build())
+            .secretProcessor(noSecrets())
+            .client(client)
+            .notifier(notifier)
+            .build();
+
+    CallculonConfiguration event = config("/teapot");
+    CallculonResponse response = explodingHandler.handleRequest(event, ctx);
+    assertThat(response).isNotNull();
+    assertThat(response.getStatusCode()).isEqualTo(0);
+    assertThat(response.getDuration()).isNotNull();
+    assertThat(response.getRequestTime()).isNotNull();
+    assertThat(response.isNotificationError()).isFalse();
   }
 
   private CallculonHandler handler() {
@@ -83,18 +128,7 @@ class CallculonHandlerTest {
                 .connectTimeout(Duration.ofSeconds(5))
                 .requestTimeout(Duration.ofSeconds(10))
                 .build())
-        .secretProcessor(
-            new SecretProcessor() {
-              @Override
-              public String identifier() {
-                return "topsecret";
-              }
-
-              @Override
-              public List<String> lookup(List<String> secrets) {
-                return secrets;
-              }
-            })
+        .secretProcessor(noSecrets())
         .notifier(notifier)
         .build();
   }
@@ -145,6 +179,20 @@ class CallculonHandlerTest {
     event.getRequest().setPort(0);
     assertThatExceptionOfType(InvalidConfiguration.class)
         .isThrownBy(() -> handler().handleRequest(event, ctx));
+  }
+
+  private SecretProcessor noSecrets() {
+    return new SecretProcessor() {
+      @Override
+      public String identifier() {
+        return "topsecret";
+      }
+
+      @Override
+      public List<String> lookup(List<String> secrets) {
+        return secrets;
+      }
+    };
   }
 
   @Test
@@ -230,15 +278,5 @@ class CallculonHandlerTest {
         .log(Mockito.anyString());
     server = new MockServer();
     mockHttp = new MockServerClient("localhost", server.getLocalPort());
-  }
-
-  @AfterEach
-  void stopMockServer() {
-    if (server != null) {
-      server.stop();
-      server.close();
-      mockHttp.stop(true);
-      mockHttp.close();
-    }
   }
 }

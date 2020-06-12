@@ -39,7 +39,7 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
 
   /** Create a new instance initialing options from environment variables if available. */
   public CallculonHandler() {
-    this(null, null, null);
+    this(null, null, null, null);
   }
 
   /**
@@ -49,16 +49,21 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
    */
   @Builder
   public CallculonHandler(
-      HandlerOptions options, SecretProcessor secretProcessor, Notifier notifier) {
+      HandlerOptions options,
+      SecretProcessor secretProcessor,
+      Notifier notifier,
+      HttpClient client) {
     this.options = options == null ? HandlerOptions.fromEnvironmentVariables() : options;
     this.secretProcessor =
         secretProcessor == null ? AwsSecretProcessor.defaultInstance() : secretProcessor;
     this.client =
-        HttpClient.newBuilder()
-            .followRedirects(Redirect.NEVER)
-            .connectTimeout(this.options.connectTimeout())
-            .sslContext(SecurityContexts.relaxed())
-            .build();
+        client == null
+            ? HttpClient.newBuilder()
+                .followRedirects(Redirect.NEVER)
+                .connectTimeout(this.options.connectTimeout())
+                .sslContext(SecurityContexts.relaxed())
+                .build()
+            : client;
     this.notifier = notifier == null ? SlackNotifier.defaultInstance() : notifier;
   }
 
