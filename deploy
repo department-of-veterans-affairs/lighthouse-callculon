@@ -14,7 +14,7 @@ getFunction() {
   return 1
 }
 
-VPC_ENV=QA # TODO command line option
+VPC_ENV=${1:-QA} # TODO command line option
 VPC_ID= # automatically set based on VPC_ENV
 vpcId() {
   if [ -n "$VPC_ID" ]; then echo $VPC_ID; return 0; fi

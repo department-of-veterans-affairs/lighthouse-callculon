@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 OUT=target/invoke.out
-
+echo "FAILED" > $OUT
 
 aws lambda invoke \
-  --function-name project-qa-callculon \
+  --function-name project-${ENVIRONMENT:-qa}-callculon \
   --cli-binary-format raw-in-base64-out \
   --payload "$(jq -c . ${1:-payload.json})" \
   $OUT
