@@ -40,6 +40,7 @@ class SlackNotifierTest {
                 .enabled(true)
                 .cron("0 0 * * *")
                 .id("1-fugazi-1-0-0-oicu812")
+                .environment("test")
                 .build())
         .notification(
             Notification.builder()
@@ -139,10 +140,8 @@ class SlackNotifierTest {
   @Test
   @Tag("manual")
   void reallySendNotifications() {
-    if (shanktovoidWebhook().isPresent()) {
-      SlackNotifier.builder().build().onFailure(failContext(true));
-      SlackNotifier.builder().build().onSuccess(successContext(true));
-    }
+    SlackNotifier.builder().build().onFailure(failContext(true));
+    SlackNotifier.builder().build().onSuccess(successContext(true));
   }
 
   private Optional<String> shanktovoidWebhook() {

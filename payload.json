@@ -9,9 +9,9 @@
   },
   "request": {
     "protocol": "HTTPS",
-    "hostname": "api.va.gov",
+    "hostname": "blue.qa.lighthouse.va.gov",
     "port": 443,
-    "path": "/services/fhir/v0/dstu2/Patient/1011537977V693883",
+    "path": "/fhir/v0/dstu2/Patient/1011537977V693883",
     "method": "GET",
     "headers": {
       "Authorization": "Bearer aws-secret(/dvp/production/health/static-access-token)"
@@ -20,7 +20,7 @@
   "notification": {
     "slack": {
       "webhook": "aws-secret(/dvp/slack/liberty)",
-      "channel": "shanktopus",
+      "channel": "shanktovoid",
       "onFailure": true,
       "onSuccess": true
     }

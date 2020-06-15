@@ -7,16 +7,40 @@ trap onExit EXIT
 
 getFunction() {
   local functionName=$1
-  if aws lambda get-function --function-name $functionName > $WORK/$functionName
+  if aws lambda get-function --function-name $functionName > $WORK/$functionName 2>&1
   then
    return 0
   fi
   return 1
 }
 
+VPC_ENV=${1:-QA}
+VPC_ID= # automatically set based on VPC_ENV
+vpcId() {
+  if [ -n "$VPC_ID" ]; then echo $VPC_ID; return 0; fi
+  VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Environment,Values=$VPC_ENV | jq -r .Vpcs[].VpcId)
+  if [ -z "$VPC_ID" ]; then echo "Could not find VPC for environment $VPC_ENV"; exit 1; fi
+  echo $VPC_ID
+}
+
+envName() {
+  local lower="${VPC_ENV,,}"
+  echo ${lower// /_}
+}
+
+subnetsForVpc() {
+  aws ec2 describe-subnets --filters Name=vpc-id,Values=$(vpcId) | jq -r '.Subnets|map(.SubnetId)|join(",")'
+}
+
+securityGroupForVpc() {
+  aws ec2 describe-security-groups \
+    --filters Name=vpc-id,Values=$(vpcId) Name=group-name,Values=lambda-$(envName)-sg \
+    | jq '.SecurityGroups|map(.GroupId)|join(",")'
+}
+
 deploy() {
   local executionRoleArn="arn:aws-us-gov:iam::533575416491:role/project/project-slack-alerts-role"
-  local name=project-callculon
+  local name=project-$(envName)-callculon
   local runtime=java11
   local handler=gov.va.api.lighthouse.callculon.CallculonHandler
   local timeout=120
@@ -24,8 +48,8 @@ deploy() {
   local jar=$(find target/ -name "callculon-*.jar" | sort -r | head -1)
 
   echo "Deploying $name with $jar"
-  
-# TODO VPC/SUBNET CONFIGURATION
+
+
   if getFunction $name
   then
     echo "Updating $name"
@@ -34,6 +58,8 @@ deploy() {
       --zip-file fileb://$jar
   else
     echo "Creating $name"
+    local subnets=$(subnetsForVpc)
+    local securityGroups=$(securityGroupForVpc)
     aws lambda create-function \
       --function-name $name \
       --runtime $runtime \
@@ -42,7 +68,8 @@ deploy() {
       --timeout $timeout \
       --memory-size $memorySize \
       --publish \
-      --tags Owner=bschofield,DeleteMe=true \
+      --vpc-conf SubnetIds=$subnets,SecurityGroupIds=$securityGroups \
+      --tags Environment=$(envName) \
       --zip-file fileb://$jar
   fi
 }

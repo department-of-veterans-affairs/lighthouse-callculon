@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Protocol;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Request;
 import gov.va.api.lighthouse.callculon.Notifier.NotificationContext;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -37,7 +39,7 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
 
   /** Create a new instance initialing options from environment variables if available. */
   public CallculonHandler() {
-    this(null, null, null);
+    this(null, null, null, null);
   }
 
   /**
@@ -47,15 +49,21 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
    */
   @Builder
   public CallculonHandler(
-      HandlerOptions options, SecretProcessor secretProcessor, Notifier notifier) {
+      HandlerOptions options,
+      SecretProcessor secretProcessor,
+      Notifier notifier,
+      HttpClient client) {
     this.options = options == null ? HandlerOptions.fromEnvironmentVariables() : options;
     this.secretProcessor =
         secretProcessor == null ? AwsSecretProcessor.defaultInstance() : secretProcessor;
     this.client =
-        HttpClient.newBuilder()
-            .followRedirects(Redirect.NEVER)
-            .connectTimeout(this.options.connectTimeout())
-            .build();
+        client == null
+            ? HttpClient.newBuilder()
+                .followRedirects(Redirect.NEVER)
+                .connectTimeout(this.options.connectTimeout())
+                .sslContext(SecurityContexts.relaxed())
+                .build()
+            : client;
     this.notifier = notifier == null ? SlackNotifier.defaultInstance() : notifier;
   }
 
@@ -96,14 +104,30 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
     var request = asHttpRequest(config.getRequest());
     context.getLogger().log("Requesting " + request.uri());
 
-    var response = client.send(request, BodyHandlers.ofString());
+    Optional<String> note;
+    int statusCode;
+    try {
+      var response = client.send(request, BodyHandlers.ofString());
+      statusCode = response.statusCode();
+      note = Optional.empty();
+    } catch (IOException e) {
+      statusCode = 0;
+      note =
+          Optional.of(
+              "Error `"
+                  + e.getClass().getSimpleName()
+                  + "` with message: _"
+                  + e.getMessage()
+                  + "_");
+    }
     var notificationContext =
         NotificationContext.builder()
             .config(config)
             .secretProcessor(secretProcessor)
             .logger(context.getLogger())
             .url(request.uri().toString())
-            .statusCode(response.statusCode())
+            .statusCode(statusCode)
+            .note(note)
             .build();
     var requestDuration = Duration.between(start, Instant.now());
     context

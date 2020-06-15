@@ -44,6 +44,7 @@ public class CallculonConfiguration {
     private String product;
     private String version;
     private String id;
+    private String environment;
   }
 
   @Data

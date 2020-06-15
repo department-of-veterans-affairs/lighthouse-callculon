@@ -1,5 +1,7 @@
 package gov.va.api.lighthouse.callculon;
 
+import static java.util.Map.entry;
+
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Deployment;
 import gov.va.api.lighthouse.callculon.CallculonConfiguration.Slack;
 import java.io.IOException;
@@ -37,7 +39,10 @@ public class SlackNotifier implements Notifier {
 
   private static HttpResponse<String> defaultInvoker(HttpRequest request) {
     try {
-      return HttpClient.newHttpClient().send(request, BodyHandlers.ofString());
+      return HttpClient.newBuilder()
+          .sslContext(SecurityContexts.relaxed())
+          .build()
+          .send(request, BodyHandlers.ofString());
     } catch (InterruptedException | IOException e) {
       throw new NotificationFailure(e);
     }
@@ -112,10 +117,12 @@ public class SlackNotifier implements Notifier {
             .resource("/slack-failure-message-template.json")
             .substitutions(
                 Map.of(
+                    "environment", deployment(ctx).getEnvironment(),
                     "channel", slack(ctx).getChannel(),
                     "name", ctx.getConfig().getName(),
                     "url", ctx.getUrl(),
                     "statusCode", String.valueOf(ctx.getStatusCode()),
+                    "note", ctx.getNote().orElse("HTTP status " + ctx.getStatusCode()),
                     "product", deployment(ctx).getProduct(),
                     "version", deployment(ctx).getVersion(),
                     "cron", asterisks(deployment(ctx).getCron()),
@@ -134,17 +141,18 @@ public class SlackNotifier implements Notifier {
         MrGarveyTheSubstitute.builder()
             .resource("/slack-successful-message-template.json")
             .substitutions(
-                Map.of(
-                    "channel", slack(ctx).getChannel(),
-                    "emoji", emoji(),
-                    "name", ctx.getConfig().getName(),
-                    "url", ctx.getUrl(),
-                    "statusCode", String.valueOf(ctx.getStatusCode()),
-                    "note", ctx.getNote().orElse(nice()),
-                    "product", deployment(ctx).getProduct(),
-                    "version", deployment(ctx).getVersion(),
-                    "cron", asterisks(deployment(ctx).getCron()),
-                    "deploymentId", deployment(ctx).getId()))
+                Map.ofEntries(
+                    entry("environment", deployment(ctx).getEnvironment()),
+                    entry("channel", slack(ctx).getChannel()),
+                    entry("emoji", emoji()),
+                    entry("name", ctx.getConfig().getName()),
+                    entry("url", ctx.getUrl()),
+                    entry("statusCode", String.valueOf(ctx.getStatusCode())),
+                    entry("note", ctx.getNote().orElse(nice())),
+                    entry("product", deployment(ctx).getProduct()),
+                    entry("version", deployment(ctx).getVersion()),
+                    entry("cron", asterisks(deployment(ctx).getCron())),
+                    entry("deploymentId", deployment(ctx).getId())))
             .build()
             .rollCall();
     post(ctx, message);

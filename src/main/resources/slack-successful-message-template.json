@@ -5,7 +5,7 @@
       "type" : "section",
       "text" : {
         "type" : "mrkdwn",
-        "text" : ":${emoji}: Call for *${name}* succeeded with *${statusCode}* response!"
+        "text" : ":${emoji}: *SUCCESS*: [*${environment}]* Call for *${product} ${name}* succeeded with *${statusCode}* response!"
       }
     },
     {
@@ -29,7 +29,7 @@
       "elements" : [
         {
           "type" : "mrkdwn",
-          "text" : "*${product} ${version}* is scheduled as *${cron}* and was deployed by *${deploymentId}*"
+          "text" : "*${product} ${version}* is scheduled as *${cron}* and was deployed by *${deploymentId}* to *${environment}*"
         }
       ]
     }
