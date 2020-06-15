@@ -1,10 +1,10 @@
 # Callculon
 
-Callculon is robot that is responsible for invoking an HTTP endpoint.
+Callculon is a robot that is responsible for invoking an HTTP endpoint.
 It is designed to work with AWS Events.
 It was created specifically to process scheduled events as part of a timer solution.
 
-Callculon provides Slack integration and notify Slack upon success or failure
+Callculon provides Slack integration and can notify Slack upon success or failure
 and supports sensitive data via SecureString entries in AWS Parameter Store.
 
 See [Health API Deployer](https://github.com/department-of-veterans-affairs/health-apis-deployer).
@@ -16,11 +16,11 @@ See [AWS Scheduled Event cron expression syntax](https://docs.aws.amazon.com/Ama
 
 The following environment variables can be used to configure the Callculon lambda.
 
-**`CALLCULON_CONNECT_TIMEOUT`** _`(PT20S)`_  
+**`CALLCULON_CONNECT_TIMEOUT`** _`(PT20S)`_
 How long to wait before giving up when connecting to a remote server
 specified as an ISO 8601 duration.
 
-**`CALLCULON_REQUEST_TIMEOUT`**  _`(PT120S)`_  
+**`CALLCULON_REQUEST_TIMEOUT`**  _`(PT120S)`_
 How long to wait before giving up on a server to respond to a request
 specified as an ISO 8601 duration.
 
@@ -34,25 +34,25 @@ See [payload.json](payload.json)
   name: ........... [String] Name of this invocation used in notifications and logging.
   deployment: {     [Object] Informational only, no action taken regardless of any values.
     enabled: ...... [Boolean] Whether the source timer was enabled.
-    environment ... [String] The environment name this timer is deployed.
+    environment ... [String] The environment name where this timer is deployed.
     cron: ......... [Cron] Time schedule.
     product: ...... [String] Production name.
     version: ...... [String] Production deployment version.
     id: ........... [String] Deployment ID.
   }
   request: {        [Object] Request configuration
-    protocol: ..... [enum] (HTTP|HTTPS) Protocol use when making HTTP request.
+    protocol: ..... [enum] (HTTP|HTTPS) Protocol used when making HTTP request.
     hostname: ..... [String] HTTP server host name.
     port: ......... [Integer] HTTP server port.
     path: ......... [Secret String] HTTP request path.
     method: ....... [enum] (GET) HTTP method. Note: POST support to be added later.
     headers: {      [Object] Optional dictionary of HTTP request headers.
-       [String]: [Secret String] Any key value pair.
+       [String]: [Secret String] Any key-value pair.
      }
   }
   notification: {   [Object] Configuration for all notifications.
     slack: {        [Object] Configuration for Slack notifications.
-      webhook: .... [Secret URL] Slack web hook URL.
+      webhook: .... [Secret URL] Slack webhook URL.
       channel: .... [String] Slack channel without the leading `#`
       onFailure: .. [Boolean] Whether notification should be sent on failure. (true)
       onSuccess: .. [Boolean] Whether notification should be sent on success. (false)
