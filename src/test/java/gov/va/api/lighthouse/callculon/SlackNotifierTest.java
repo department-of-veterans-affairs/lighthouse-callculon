@@ -40,6 +40,7 @@ class SlackNotifierTest {
                 .enabled(true)
                 .cron("0 0 * * *")
                 .id("1-fugazi-1-0-0-oicu812")
+                .environment("test")
                 .build())
         .notification(
             Notification.builder()

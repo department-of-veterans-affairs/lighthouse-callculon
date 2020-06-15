@@ -69,6 +69,7 @@ class CallculonHandlerTest {
                 .id("0-test-0-0-0-000")
                 .product("test")
                 .version("0.0.0")
+                .environment("test")
                 .build())
         .notification(
             Notification.builder()
