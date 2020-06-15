@@ -9,6 +9,9 @@ and supports sensitive data via SecureString entries in AWS Parameter Store.
 
 See [Health API Deployer](https://github.com/department-of-veterans-affairs/health-apis-deployer).
 
+See [AWS Scheduled Event cron expression syntax](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
+
+
 ## Lambda Configuration
 
 The following environment variables can be used to configure the Callculon lambda.
