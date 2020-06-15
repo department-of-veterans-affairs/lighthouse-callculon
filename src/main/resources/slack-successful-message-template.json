@@ -5,7 +5,7 @@
       "type" : "section",
       "text" : {
         "type" : "mrkdwn",
-        "text" : ":${emoji}: [*${environment}]* Call for *${product} ${name}* succeeded with *${statusCode}* response!"
+        "text" : ":${emoji}: *SUCCESS*: [*${environment}]* Call for *${product} ${name}* succeeded with *${statusCode}* response!"
       }
     },
     {
