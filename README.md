@@ -1,5 +1,13 @@
 # Callculon
 
+Callculon is robot that is responsible for invoking an HTTP endpoint.
+It is designed to work with AWS Events.
+It was created specifically to process scheduled events as part of a timer solution.
+
+Callculon provides Slack integration and notify Slack upon success or failure
+and supports sensitive data via SecureString entries in AWS Parameter Store.
+
+See [Health API Deployer](https://github.com/department-of-veterans-affairs/health-apis-deployer).
 
 ## Lambda Configuration
 
@@ -8,9 +16,9 @@ The following environment variables can be used to configure the Callculon lambd
 **`CALLCULON_CONNECT_TIMEOUT`** _`(PT20S)`_  
 How long to wait before giving up when connecting to a remote server
 specified as an ISO 8601 duration.
- 
+
 **`CALLCULON_REQUEST_TIMEOUT`**  _`(PT120S)`_  
-How long to wait before giving up on a server to respond to a request 
+How long to wait before giving up on a server to respond to a request
 specified as an ISO 8601 duration.
 
 ## Invoking
@@ -21,8 +29,9 @@ See [payload.json](payload.json)
 ```
 {
   name: ........... [String] Name of this invocation used in notifications and logging.
-  deployment: {     [Object] Informational only, not action taken regardless of any values.
+  deployment: {     [Object] Informational only, no action taken regardless of any values.
     enabled: ...... [Boolean] Whether the source timer was enabled.
+    environment ... [String] The environment name this timer is deployed.
     cron: ......... [Cron] Time schedule.
     product: ...... [String] Production name.
     version: ...... [String] Production deployment version.
@@ -33,7 +42,7 @@ See [payload.json](payload.json)
     hostname: ..... [String] HTTP server host name.
     port: ......... [Integer] HTTP server port.
     path: ......... [Secret String] HTTP request path.
-    method: ....... [enum] (GET) HTTP method. Note: POST support to be added later. 
+    method: ....... [enum] (GET) HTTP method. Note: POST support to be added later.
     headers: {      [Object] Optional dictionary of HTTP request headers.
        [String]: [Secret String] Any key value pair.
      }
