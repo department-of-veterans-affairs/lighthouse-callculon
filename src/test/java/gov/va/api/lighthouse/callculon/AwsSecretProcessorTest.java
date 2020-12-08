@@ -12,6 +12,20 @@ import software.amazon.awssdk.services.ssm.model.Parameter;
 
 class AwsSecretProcessorTest {
 
+  static {
+    configureAwsForTest();
+  }
+
+  /**
+   * This is just used to calm down the AWS internals. We don't actually use them during testing,
+   * but construction of the configuration chain will fail if one of these is not set.
+   */
+  public static void configureAwsForTest() {
+    if (System.getProperty("aws.region") == null && System.getenv("AWS_REGION") == null) {
+      System.setProperty("aws.region", "us-gov-west-1");
+    }
+  }
+
   static Function<GetParametersRequest, GetParametersResponse> mockParameters(
       Map<String, String> secrets) {
     return request ->

@@ -4,6 +4,10 @@ import org.junit.jupiter.api.Test;
 
 class LambaDefaultConstructorsTest {
 
+  static {
+    AwsSecretProcessorTest.configureAwsForTest();
+  }
+
   @Test
   void inputAndOutputModelsHaveDefaultConstructor() {
     /*
