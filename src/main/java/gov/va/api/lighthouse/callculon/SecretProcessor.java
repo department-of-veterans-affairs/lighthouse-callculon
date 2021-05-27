@@ -102,12 +102,14 @@ public interface SecretProcessor extends Function<String, String> {
 
   List<String> lookup(List<String> secrets);
 
+  /** The secret is not of a valid format. */
   class InvalidSecretSpecification extends RuntimeException {
     public InvalidSecretSpecification(String value) {
       super(value);
     }
   }
 
+  /** To be thrown when secret/values to not match up 1-to-1. */
   class MissingLookupValue extends RuntimeException {
     public MissingLookupValue(List<String> secrets, int expected, int got) {
       super("Expected " + expected + ", got " + got + ":" + secrets);

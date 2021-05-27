@@ -27,6 +27,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 
+/** The meat and bones of Callculon, takes a configuration and performs an action. */
 public class CallculonHandler implements RequestHandler<CallculonConfiguration, CallculonResponse> {
 
   private final HandlerOptions options;
@@ -193,6 +194,7 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
     ERROR
   }
 
+  /** HandlerOptions. */
   @Builder
   @Getter
   @Accessors(fluent = true)
@@ -234,6 +236,7 @@ public class CallculonHandler implements RequestHandler<CallculonConfiguration, 
     }
   }
 
+  /** Generic exception that can be used for any incorrect Callculon configurations. */
   public static class InvalidConfiguration extends RuntimeException {
 
     public InvalidConfiguration(String message) {

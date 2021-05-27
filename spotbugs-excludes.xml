@@ -19,4 +19,14 @@
       <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
     </Or>
   </Match>
+  <!--
+    OnSuccess creates a Random and reuses it to get emoji/quotes.
+  -->
+  <Match>
+    <Class name="gov.va.api.lighthouse.callculon.SlackNotifier"/>
+    <Method name="onSuccess"/>
+    <Or>
+      <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
+    </Or>
+  </Match>
 </FindBugsFilter>

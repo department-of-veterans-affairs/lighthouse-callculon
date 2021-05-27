@@ -38,7 +38,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockserver.client.MockServerClient;
-import org.mockserver.mockserver.MockServer;
+import org.mockserver.netty.MockServer;
 
 @ExtendWith(MockitoExtension.class)
 class CallculonHandlerTest {

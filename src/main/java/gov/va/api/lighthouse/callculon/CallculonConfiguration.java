@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/** Configure all parts of the Callculon lambda. */
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,15 +26,18 @@ public class CallculonConfiguration {
     return notification;
   }
 
+  /** Request Method. */
   public enum RequestMethod {
     GET
   }
 
+  /** Request protocol. */
   public enum Protocol {
     HTTP,
     HTTPS
   }
 
+  /** Configure the deployed Callculon lambda. */
   @Data
   @Builder
   @NoArgsConstructor
@@ -47,6 +51,7 @@ public class CallculonConfiguration {
     private String environment;
   }
 
+  /** Configure the notification(s) Callculon sends. */
   @Data
   @Builder
   @NoArgsConstructor
@@ -55,6 +60,7 @@ public class CallculonConfiguration {
     private Slack slack;
   }
 
+  /** Configure the request that Callculon will send/test. */
   @Data
   @Builder
   @NoArgsConstructor
@@ -68,6 +74,7 @@ public class CallculonConfiguration {
     private Map<String, String> headers;
   }
 
+  /** Configure Slack messaging. */
   @Data
   @Builder
   @NoArgsConstructor

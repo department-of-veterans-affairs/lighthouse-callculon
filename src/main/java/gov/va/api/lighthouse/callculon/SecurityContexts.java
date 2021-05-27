@@ -10,6 +10,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import lombok.SneakyThrows;
 
+/** Defines TLS. */
 public class SecurityContexts {
 
   /**
