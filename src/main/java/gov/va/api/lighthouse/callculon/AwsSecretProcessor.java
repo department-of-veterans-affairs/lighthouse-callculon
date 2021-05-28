@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.ssm.model.GetParametersRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 
+/** Look up secrets within an AWS Parameter Store. */
 public class AwsSecretProcessor implements SecretProcessor {
 
   private final Function<GetParametersRequest, GetParametersResponse> ssmInvoker;

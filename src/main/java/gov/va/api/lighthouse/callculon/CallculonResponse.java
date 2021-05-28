@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/** Configure Callculon's expected request/response behavior. */
 @Data
 @Builder
 @NoArgsConstructor

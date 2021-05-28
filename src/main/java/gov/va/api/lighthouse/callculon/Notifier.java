@@ -5,11 +5,13 @@ import java.util.Optional;
 import lombok.Builder;
 import lombok.Value;
 
+/** Defines an interface for sending notifications from Callculon. */
 public interface Notifier {
   void onFailure(NotificationContext ctx);
 
   void onSuccess(NotificationContext ctx);
 
+  /** Defines the basic parts required to send a notification. */
   @Builder
   @Value
   class NotificationContext {
@@ -21,6 +23,7 @@ public interface Notifier {
     LambdaLogger logger;
   }
 
+  /** Defines exceptions that can be thrown on a notification failure. */
   class NotificationFailure extends RuntimeException {
     public NotificationFailure(String message) {
       super(message);

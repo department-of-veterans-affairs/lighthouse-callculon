@@ -14,10 +14,12 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 import lombok.Builder;
 import lombok.SneakyThrows;
 
+/** A Notifier for sending notifications to Slack. */
 public class SlackNotifier implements Notifier {
 
   private final Function<HttpRequest, HttpResponse<String>> invoker;
@@ -60,7 +62,7 @@ public class SlackNotifier implements Notifier {
     return ctx.getConfig().getDeployment();
   }
 
-  private String emoji() {
+  private String emoji(int randomInt) {
     List<String> emojis =
         List.of(
             "100",
@@ -78,10 +80,11 @@ public class SlackNotifier implements Notifier {
             "unicorn_face"
             //
             );
-    return emojis.get(new SecureRandom().nextInt(emojis.size()));
+    int index = randomInt % emojis.size();
+    return emojis.get(index);
   }
 
-  private String nice() {
+  private String nice(int randomInt) {
     List<String> messages =
         List.of(
             "I talk a lot, so I've learned to just tune myself out...",
@@ -104,7 +107,8 @@ public class SlackNotifier implements Notifier {
             "And I knew exactly what to do. "
                 + "But in a much more real sense, I had no idea what to do.",
             "I just want to lie on the beach and eat hot dogs. That's all I've ever wanted.");
-    return "_" + messages.get(new SecureRandom().nextInt(messages.size())) + "_";
+    int index = randomInt % messages.size();
+    return "_" + messages.get(index) + "_";
   }
 
   @Override
@@ -137,6 +141,7 @@ public class SlackNotifier implements Notifier {
     if (!slack(ctx).isOnSuccess()) {
       return;
     }
+    Random rand = new SecureRandom();
     String message =
         MrGarveyTheSubstitute.builder()
             .resource("/slack-successful-message-template.json")
@@ -144,11 +149,11 @@ public class SlackNotifier implements Notifier {
                 Map.ofEntries(
                     entry("environment", deployment(ctx).getEnvironment()),
                     entry("channel", slack(ctx).getChannel()),
-                    entry("emoji", emoji()),
+                    entry("emoji", emoji(rand.nextInt(100))),
                     entry("name", ctx.getConfig().getName()),
                     entry("url", ctx.getUrl()),
                     entry("statusCode", String.valueOf(ctx.getStatusCode())),
-                    entry("note", ctx.getNote().orElse(nice())),
+                    entry("note", ctx.getNote().orElse(nice(rand.nextInt(100)))),
                     entry("product", deployment(ctx).getProduct()),
                     entry("version", deployment(ctx).getVersion()),
                     entry("cron", asterisks(deployment(ctx).getCron())),
